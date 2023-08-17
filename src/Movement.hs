@@ -24,12 +24,44 @@ import Lens.Micro.GHC
 import Data.Char
 
 makeLenses ''SquareData
+makeLenses ''Hist
 makeLenses ''Field
 makeLenses ''AppState
 
 isBlock :: Square -> Bool
 isBlock Block = True
 isBlock _ = False
+
+getHist :: Field -> Hist
+getHist f = Hist
+    { _hSel = s
+    , _hDir = f ^. selectedDir
+    , _hSquare = (f ^. playerGrid) ! s
+    }
+    where
+        s = f ^. selected
+
+-- go backwards in history
+prevField :: Field -> Field
+prevField f = case f ^. prev of
+    [] -> f
+    (Hist s d sq : hs) -> f
+        & prev .~ hs
+        & next %~ (getHist f :)
+        & selected .~ s
+        & selectedDir .~ d
+        & playerGrid . ix s .~ sq
+
+-- go forwards in history
+nextField :: Field -> Field
+nextField f = case f ^. next of
+    [] -> f
+    (Hist s d sq : hs) -> f
+        & next .~ hs
+        & prev %~ (getHist f :)
+        & selected .~ s
+        & selectedDir .~ d
+        & playerGrid . ix s .~ sq
 
 data Move = MoveUp | MoveDown | MoveLeft | MoveRight deriving (Show, Eq)
 

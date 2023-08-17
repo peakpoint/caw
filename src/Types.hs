@@ -5,6 +5,7 @@ module Types
     , Grid
     , SquareData (..)
     , GridData
+    , Hist (..)
     , Field (..)
     , AppState (..)
     , Name (..)
@@ -79,15 +80,22 @@ data Settings = Settings
     , _startOfWord :: StartOfWordSettings
     } deriving (Eq, Show)
 
+data Hist = Hist
+    { _hSel :: !GridIndex
+    , _hDir :: !Dir
+    , _hSquare :: !Square
+    } deriving (Eq, Show)
+
 data Field = Field
     { _playerGrid :: !Grid
     , _selected :: !GridIndex
     , _selectedDir :: !Dir
+    , _prev :: [Hist]
+    , _next :: [Hist]
     } deriving (Show)
 
 data AppState = AppState
     { _field :: !Field
-    , _history :: ![Field]
     , _gridData :: !GridData
     , _bounds :: !Bounds
     , _puzzle :: !Puzzle
