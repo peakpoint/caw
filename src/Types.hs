@@ -1,3 +1,5 @@
+{-# LANGUAGE StrictData #-}
+
 module Types
     ( module Puzzle.Types
     , Bounds
@@ -32,9 +34,9 @@ data Square = Letter Char | Rebus Text | Block
 type Grid = Array GridIndex Square
 
 data SquareData = SquareData
-    { _sqNum :: !(Maybe Int)
-    , _sqAcross :: !(Maybe Int)
-    , _sqDown :: !(Maybe Int)
+    { _sqNum :: Maybe Int
+    , _sqAcross :: Maybe Int
+    , _sqDown :: Maybe Int
     , _style :: Maybe Style
     } deriving (Show)
 
@@ -81,24 +83,24 @@ data Settings = Settings
     } deriving (Eq, Show)
 
 data Hist = Hist
-    { _hSel :: !GridIndex
-    , _hDir :: !Dir
-    , _hSquare :: !Square
+    { _hSel :: GridIndex
+    , _hDir :: Dir
+    , _hSquare :: Square
     } deriving (Eq, Show)
 
 data Field = Field
-    { _playerGrid :: !Grid
-    , _selected :: !GridIndex
-    , _selectedDir :: !Dir
+    { _playerGrid :: Grid
+    , _selected :: GridIndex
+    , _selectedDir :: Dir
     , _prev :: [Hist]
     , _next :: [Hist]
     } deriving (Show)
 
 data AppState = AppState
-    { _field :: !Field
-    , _gridData :: !GridData
-    , _bounds :: !Bounds
-    , _puzzle :: !Puzzle
+    { _field :: Field
+    , _gridData :: GridData
+    , _bounds :: Bounds
+    , _puzzle :: Puzzle
     , _settings :: Settings
     } deriving (Show)
 
