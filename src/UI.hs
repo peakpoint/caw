@@ -103,8 +103,13 @@ handleEvent (VtyEvent v) =
             moveL %= oppositeMove
         V.EvKey (V.KChar ' ') [] -> do
             invalidateCacheEntry GridX
-            field %= setSquare ' '
-            moveL %= id
+            s <- use $ settings . space
+            case s of
+                ClearSquareAndMove -> do
+                    field %= setSquare ' '
+                    moveL %= id
+                SpaceSwitchDir -> do
+                    dirL %= oppositeDir
         V.EvKey (V.KChar '\t') [] -> do
             invalidateCacheEntry GridX
             cs <- use clueIDs
