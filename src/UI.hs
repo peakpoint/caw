@@ -14,7 +14,6 @@ import Control.Monad
 import Control.Monad.Trans
 
 import Data.Char (isAlpha)
-import qualified Data.IntMap.Strict as IM
 import Data.Maybe (fromMaybe)
 
 import Graphics.Vty (withStyle)
@@ -32,6 +31,7 @@ import RenderClue
 import RenderGrid
 import Types
 
+makeLenses ''Settings
 makeLenses ''AppState
 
 data Event = Event
@@ -107,16 +107,28 @@ handleEvent (VtyEvent v) =
             moveL %= id
         V.EvKey (V.KChar '\t') [] -> do
             invalidateCacheEntry GridX
-            cs <- use $ puzzle . to clues
-            clueL %= \(d, cNum) ->
-                case IM.lookupGT cNum $ cs ^. clueMapL d of
-                    Just (k, _) -> (d, k)
-                    Nothing ->
-                        let d' = oppositeDir d in
-                        (d', fst $ IM.findMin $ cs ^. clueMapL d')
-        -- TODO: shift-tab
-        V.EvKey V.KBackTab _ ->
-            return ()
+            cs <- use clueIDs
+            t <- use $ settings . tab
+            case t of
+                TabSwitchDir ->
+                    dirL %= oppositeDir
+                TabNextWord ->
+                    clueL %= nextClue cs
+                TabNextIncompleteWord -> do
+                    st <- get
+                    clueL %= nextUnfilledClue st
+        V.EvKey V.KBackTab _ -> do
+            invalidateCacheEntry GridX
+            cs <- use clueIDs
+            t <- use $ settings . tab
+            case t of
+                TabSwitchDir ->
+                    dirL %= oppositeDir
+                TabNextWord ->
+                    clueL %= prevClue cs
+                TabNextIncompleteWord -> do
+                    st <- get
+                    clueL %= prevUnfilledClue st
         -- TODO: enter rebus
         V.EvKey V.KEsc _ ->
             halt

@@ -6,7 +6,6 @@ module Puzzle.Types
     , Dir (..), dirChar
     , Square (..)
     , GridIndex
-    , ClueIndex
     , Clue (..)
     , ClueMap
     , Clues (..)
@@ -35,8 +34,6 @@ data Square =
     deriving (Show)
 
 type GridIndex = (Int, Int)
-
-type ClueIndex = (Dir, Int)
 
 data Clue = Clue
     { cDir :: Dir

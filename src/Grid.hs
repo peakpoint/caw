@@ -1,7 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
 
-module Grid where
+module Grid (mkAppState) where
 
 import Data.Array (array, inRange, (!))
 import qualified Data.Array as A
@@ -11,6 +10,8 @@ import Data.Foldable
 import Data.Maybe
 import Control.Applicative
 import Movement
+import qualified Data.Map.Strict as M
+import qualified Data.IntMap.Strict as IM
 
 mkGridData :: P.Grid -> Bounds -> GridData
 mkGridData g b@(x, y) = array bs $
@@ -102,6 +103,9 @@ mkAppState p = AppState
     , _gridData = gd
     , _bounds = b
     , _puzzle = p
+    , _clueIDs = M.union
+        (toMap Across $ acrossClues $ clues p)
+        (toMap Down $ downClues $ clues p)
     , _settings = defaultSettings }
     where
         b = snd $ A.bounds $ grid p
@@ -110,3 +114,5 @@ mkAppState p = AppState
         gd = mkGridData g b
         ind = fst $ fromJust $ find (not . isBlock . snd) $ A.assocs g'
         sd = gd ! ind
+
+        toMap d = M.fromDistinctAscList . map (\(i, c) -> ((d, i), c)) . IM.toAscList

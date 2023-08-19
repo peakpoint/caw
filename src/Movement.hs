@@ -6,11 +6,14 @@
 module Movement
     (Move (..)
     , isBlock
+    , getHist, prevField, nextField
     , tryDir, dirL'
     , oppositeDir
     , oppositeMove
     , setSquare
     , clueL, selL, dirL, clueMapL, moveL
+    , prevClue, nextClue
+    , prevUnfilledClue , nextUnfilledClue
     ) where
 
 import Types
@@ -22,6 +25,8 @@ import qualified Data.Array as A
 import Data.Foldable
 import Lens.Micro.GHC
 import Data.Char
+import qualified Data.Text as T
+import qualified Data.Map.Strict as M
 
 makeLenses ''SquareData
 makeLenses ''Hist
@@ -144,7 +149,7 @@ squareData i = gridData . ix i
 square :: GridIndex -> SimpleGetter AppState Square
 square i = to $ \st -> (st ^. field . playerGrid) ! i
 
-clueL :: Lens' AppState (Dir, Int)
+clueL :: Lens' AppState ClueID
 clueL = lens
     (\st ->
         let d = st ^. field . selectedDir in
@@ -156,6 +161,17 @@ clueL = lens
                 & field . selectedDir .~ d
             Nothing -> st
         )
+
+clueSquaresL :: ClueID -> Lens' AppState [Square]
+clueSquaresL (d, n) = lens
+        (\st ->
+            [st ^. square i | i <- is st])
+        (\st sqs -> st &
+            field . playerGrid %~
+                (A.// zip (is st) sqs))
+    where
+        is st = [i | (i, sd) <- A.assocs $ st ^. gridData,
+            sd ^. dirL' d == Just n]
 
 dirL :: Lens' AppState Dir
 dirL = lens
@@ -172,3 +188,42 @@ selL = lens (^. field . selected)
         | otherwise -> st
             & field . selected .~ i
             & dirL %~ id)
+
+prevClue, nextClue :: ClueIDMap -> ClueID -> ClueID
+
+prevClue cs cID =
+    case M.lookupLT cID cs of
+        Just (c, _) -> c
+        Nothing -> fst $ M.findMax cs
+
+nextClue cs cID =
+    case M.lookupGT cID cs of
+        Just (c, _) -> c
+        Nothing -> fst $ M.findMin cs
+
+isFilled :: Square -> Bool
+isFilled (Letter c) = c /= ' '
+isFilled (Rebus t) = not $ T.null t
+isFilled Block = True
+
+isClueFilled :: AppState -> ClueID -> Bool
+isClueFilled st c = all isFilled $ st ^. clueSquaresL c
+
+isGridFilled :: Grid -> Bool
+isGridFilled = all isFilled . A.elems
+
+stepUnfilledClue :: (ClueID -> ClueID) -> AppState -> ClueID -> ClueID
+stepUnfilledClue f st c =
+    if isGridFilled $ st ^. field . playerGrid
+        then c'
+        else fromMaybe c' $
+            find (not . isClueFilled st) $
+            take (M.size cs) $
+            iterate f c'
+    where
+        cs = st ^. clueIDs
+        c' = f c
+
+prevUnfilledClue, nextUnfilledClue :: AppState -> ClueID -> ClueID
+prevUnfilledClue st = stepUnfilledClue (prevClue $ st ^. clueIDs) st
+nextUnfilledClue st = stepUnfilledClue (nextClue $ st ^. clueIDs) st

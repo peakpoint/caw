@@ -9,6 +9,8 @@ module Types
     , GridData
     , Hist (..)
     , Field (..)
+    , ClueID
+    , ClueIDMap
     , AppState (..)
     , Name (..)
     , ArrowSettings (..)
@@ -25,6 +27,7 @@ module Types
 import Data.Array
 import Puzzle.Types hiding (Square (..), Grid)
 import Data.Text
+import Data.Map.Strict (Map)
 
 type Bounds = GridIndex
 
@@ -96,11 +99,15 @@ data Field = Field
     , _next :: [Hist]
     } deriving (Show)
 
+type ClueID = (Dir, Int)
+type ClueIDMap = Map ClueID Clue
+
 data AppState = AppState
     { _field :: Field
     , _gridData :: GridData
     , _bounds :: Bounds
     , _puzzle :: Puzzle
+    , _clueIDs :: ClueIDMap
     , _settings :: Settings
     } deriving (Show)
 
