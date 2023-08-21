@@ -23,8 +23,6 @@ import Lens.Micro
 import Lens.Micro.TH
 import Lens.Micro.Mtl
 
-import Puzzle.Types
-
 import Grid
 import Movement
 import RenderClue
@@ -99,14 +97,14 @@ handleEvent (VtyEvent v) =
     case v of
         V.EvKey V.KBS [] -> do
             invalidateCacheEntry GridX
-            field %= setSquare ' '
+            field %= setSquare (Letter ' ')
             moveL %= oppositeMove
         V.EvKey (V.KChar ' ') [] -> do
             invalidateCacheEntry GridX
             s <- use $ settings . space
             case s of
                 ClearSquareAndMove -> do
-                    field %= setSquare ' '
+                    field %= setSquare (Letter ' ')
                     moveL %= id
                 SpaceSwitchDir -> do
                     dirL %= oppositeDir
@@ -142,7 +140,7 @@ handleEvent (VtyEvent v) =
         V.EvKey (V.KChar c) [] ->
             when (isAlpha c) $ do
                 invalidateCacheEntry GridX
-                field %= setSquare c
+                field %= setSquare (Letter c)
                 moveL %= id
         V.EvKey k [] ->
             when (k `elem` [V.KUp, V.KDown, V.KLeft, V.KRight]) $ do

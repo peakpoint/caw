@@ -133,11 +133,9 @@ moveL = lens
     (\st m ->
         st & field %~ move (st ^. gridData) m)
 
-setSquare :: Char -> Field -> Field
-setSquare c f =
-    f & playerGrid . ix (f ^. selected) %~ \case
-        Letter _ -> Letter (toUpper c)
-        s -> s
+setSquare :: Square -> Field -> Field
+setSquare s f =
+    f & playerGrid . ix (f ^. selected) .~ s
 
 clueMapL :: Dir -> Lens' Clues ClueMap
 clueMapL Across = lens acrossClues (\cs m -> cs { acrossClues = m })
