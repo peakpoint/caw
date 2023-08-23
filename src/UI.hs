@@ -13,7 +13,7 @@ import Brick.Widgets.Center
 import Control.Monad
 import Control.Monad.Trans
 
-import Data.Char (isAlpha)
+import Data.Char (isAlpha, toUpper)
 import Data.Maybe (fromMaybe)
 
 import Graphics.Vty (withStyle)
@@ -156,7 +156,7 @@ handleEvent (VtyEvent v) =
         V.EvKey (V.KChar c) [] ->
             when (isAlpha c) $ do
                 invalidateCacheEntry GridX
-                field %= setSquare (Letter c)
+                field %= setSquare (Letter $ toUpper c)
                 moveL %= id
         
         V.EvKey k [] ->
