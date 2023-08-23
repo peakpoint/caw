@@ -12,6 +12,9 @@ module Movement
     , oppositeMove
     , setSquare
     , clueL, selL, dirL, clueMapL, moveL
+    , clueHead
+    , clueAssocs
+    , clueSquaresL
     , prevClue, nextClue
     , prevUnfilledClue , nextUnfilledClue
     ) where
@@ -160,16 +163,24 @@ clueL = lens
             Nothing -> st
         )
 
+clueHead :: ClueID -> SimpleGetter AppState GridIndex
+clueHead (_, n) = to $
+    \st -> head
+        [ i | (i, sd) <- A.assocs $ st ^. gridData
+            , sd ^. sqNum == Just n ]
+
+clueAssocs :: ClueID -> SimpleGetter AppState [GridIndex]
+clueAssocs (d, n) = to $ \st ->
+    [ i | (i, sd) <- A.assocs $ st ^. gridData
+        , sd ^. dirL' d == Just n ]
+
 clueSquaresL :: ClueID -> Lens' AppState [Square]
-clueSquaresL (d, n) = lens
+clueSquaresL c = lens
         (\st ->
-            [st ^. square i | i <- is st])
+            [st ^. square i | i <- st ^. clueAssocs c])
         (\st sqs -> st &
             field . playerGrid %~
-                (A.// zip (is st) sqs))
-    where
-        is st = [i | (i, sd) <- A.assocs $ st ^. gridData,
-            sd ^. dirL' d == Just n]
+                (A.// zip (st ^. clueAssocs c) sqs))
 
 dirL :: Lens' AppState Dir
 dirL = lens

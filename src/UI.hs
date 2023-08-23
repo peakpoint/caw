@@ -98,7 +98,18 @@ handleEvent (VtyEvent v) =
         V.EvKey V.KBS [] -> do
             invalidateCacheEntry GridX
             field %= setSquare (Letter ' ')
-            moveL %= oppositeMove
+
+            s <- use $ settings . startOfWord
+            
+            -- check if the head of the current clue is selected
+            -- is there a better way of doing this?
+            sel <- use selL
+            c <- use clueL
+            h <- use $ clueHead c
+
+            when (s == JumpToPreviousWord || sel /= h) $ do
+                moveL %= oppositeMove
+        
         V.EvKey (V.KChar ' ') [] -> do
             invalidateCacheEntry GridX
             s <- use $ settings . space
@@ -108,6 +119,7 @@ handleEvent (VtyEvent v) =
                     moveL %= id
                 SpaceSwitchDir -> do
                     dirL %= oppositeDir
+        
         V.EvKey (V.KChar '\t') [] -> do
             invalidateCacheEntry GridX
             cs <- use clueIDs
@@ -120,6 +132,7 @@ handleEvent (VtyEvent v) =
                 TabNextIncompleteWord -> do
                     st <- get
                     clueL %= nextUnfilledClue st
+        
         V.EvKey V.KBackTab _ -> do
             invalidateCacheEntry GridX
             cs <- use clueIDs
@@ -132,16 +145,20 @@ handleEvent (VtyEvent v) =
                 TabNextIncompleteWord -> do
                     st <- get
                     clueL %= prevUnfilledClue st
+        
         -- TODO: enter rebus
         V.EvKey V.KEsc _ ->
             halt
+        
         V.EvKey (V.KChar 'q') [V.MCtrl] ->
             halt
+        
         V.EvKey (V.KChar c) [] ->
             when (isAlpha c) $ do
                 invalidateCacheEntry GridX
                 field %= setSquare (Letter c)
                 moveL %= id
+        
         V.EvKey k [] ->
             when (k `elem` [V.KUp, V.KDown, V.KLeft, V.KRight]) $ do
                 invalidateCacheEntry GridX
@@ -151,5 +168,6 @@ handleEvent (VtyEvent v) =
                     V.KLeft -> MoveLeft
                     _ -> MoveRight
         _ -> return ()
+
 handleEvent (AppEvent _) = return ()
 handleEvent _ = return ()
