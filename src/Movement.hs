@@ -7,7 +7,7 @@ module Movement
     (Move (..)
     , isBlock
     , getHist, prevField, nextField
-    , tryDir, dirL'
+    , toDir, tryDir, dirL'
     , oppositeDir
     , oppositeMove
     , setSquare
@@ -27,7 +27,6 @@ import Data.Array ((!), inRange)
 import qualified Data.Array as A
 import Data.Foldable
 import Lens.Micro.GHC
-import Data.Char
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
 
@@ -110,25 +109,20 @@ tryDir d sd = fromMaybe Across $
         d' = oppositeDir d
 
 move :: GridData -> Move -> Field -> Field
-move gd m f = f
+move _ m f = f
     & selected .~ sel'
-    & selectedDir .~ d
     where
         g = f ^. playerGrid
         b = A.bounds g
         dxy = toOffset m
 
-        dir' = toDir m -- new direction
-
         sel = f ^. selected
-        sel' = if f ^. selectedDir /= dir' then sel else
+        sel' =
             fromMaybe sel $
                 find (not . isBlock . (g !)) $
                 takeWhile (inRange b) $
                 tail $
                 iterate dxy sel
-
-        d = tryDir dir' $ gd ! sel'
 
 moveL :: Lens' AppState Move
 moveL = lens

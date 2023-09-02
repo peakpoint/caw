@@ -159,14 +159,28 @@ handleEvent (VtyEvent v) =
                 field %= setSquare (Letter $ toUpper c)
                 moveL %= id
         
-        V.EvKey k [] ->
-            when (k `elem` [V.KUp, V.KDown, V.KLeft, V.KRight]) $ do
+        V.EvKey k l ->
+            when (k `elem` [V.KUp, V.KDown, V.KLeft, V.KRight]
+                    && null l || l == [V.MShift]) $ do
+                
                 invalidateCacheEntry GridX
-                moveL .= case k of
-                    V.KUp -> MoveUp
-                    V.KDown -> MoveDown
-                    V.KLeft -> MoveLeft
-                    _ -> MoveRight
+
+                let m = case k of
+                        V.KUp -> MoveUp
+                        V.KDown -> MoveDown
+                        V.KLeft -> MoveLeft
+                        _ -> MoveRight
+                    
+                    d' = toDir m
+                
+                d <- use dirL
+
+                when (not (null l) || d == d') $
+                    moveL .= m
+                
+                when (null l) $
+                    dirL .= d'
+        
         _ -> return ()
 
 handleEvent (AppEvent _) = return ()
