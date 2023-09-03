@@ -174,13 +174,20 @@ handleEvent (VtyEvent v) =
                     d' = toDir m
                 
                 d <- use dirL
-
-                when (not (null l) || d == d') $
-                    moveL .= m
+                a <- use $ settings . arrow
                 
-                when (null l) $
-                    dirL .= d'
-        
+                if not (null l)
+                    then moveL .= m
+                    else case a of
+                        ChangeDirAndMove -> do
+                            moveL .= m
+                            dirL .= d'
+                        KeepDir ->
+                            moveL .= m
+                        PauseFirst -> do
+                            when (d == d') $ moveL .= m
+                            dirL .= d'
+
         _ -> return ()
 
 handleEvent (AppEvent _) = return ()
